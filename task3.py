@@ -66,9 +66,10 @@ class QueryConstructor:
         query = f'SELECT * FROM {self.table_name}'
         if len(self.conditions):
             query += f' WHERE{self.build_conditions_string()}'
-        return query
+        return f'{query};'
 
 
+# Our base class for queries. Takes in a table and builds up a query selecting from that table.
 class Query:
     def __init__(self, table):
         self.query_builder = QueryConstructor(table)
@@ -141,4 +142,8 @@ print(
     Review().all()
     .filter(Review.id, Operations.EQ, 1234512)
     .build_query()
+)
+
+print(
+    Review().all().build_query()
 )
