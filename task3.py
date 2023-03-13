@@ -1,7 +1,8 @@
 import datetime
 from enum import Enum
 
-# Define some operations
+
+# First let's define some base classes for fields and operations...
 class Operations(Enum):
     EQ = '='
     IN = 'IN'
@@ -10,51 +11,9 @@ class Operations(Enum):
     GT = '>'
 
 
-# Define a base class for fields, and set up some id / url etc. based on that.
 class Field:
     allowed_operations = []
     name = None
-
-
-class IdField(Field):
-    allowed_operations = [Operations.EQ, Operations.IN, Operations.NI, Operations.LT, Operations.GT]
-    name = 'id'
-
-
-class UrlField(Field):
-    allowed_operations = [Operations.EQ]
-    name = 'url'
-
-
-class DateField(Field):
-    allowed_operations = [Operations.EQ, Operations.LT, Operations.GT]
-    name = 'date'
-
-
-class RatingField(Field):
-    allowed_operations = [Operations.EQ, Operations.LT, Operations.GT]
-    name = 'rating'
-
-
-# Define a base class for tables
-class TableBase(object):
-    def __init__(self):
-        if hasattr(self, '_meta') and self._meta.get('table_name'):
-            self.name = self._meta['table_name']
-        else:
-            self.name = self.__class__.__name__.lower()
-
-    def all(self,):
-        return Query(self)
-
-
-# Define the review table
-class Review(TableBase):
-    id = IdField()
-    url = UrlField()
-    date = DateField()
-    rating = RatingField()
-    _meta = {"table_name": "review"}
 
 
 # A condition defines a "X [OPERATION] Y" block
@@ -83,7 +42,7 @@ class Condition:
         return f'{self.field.name} {self.operator.value} {self.value}'
 
 
-# A QueryConstructor takes in a list of conditions and builds a query string
+# A QueryConstructor takes in a list of conditions and a table name, and builds a query string
 class QueryConstructor:
     def __init__(self, table):
         self.table_name = table.name
@@ -124,6 +83,49 @@ class Query:
         return self.query_builder.build_query()
 
 
+# Define a base class for tables
+class TableBase(object):
+    def __init__(self):
+        if hasattr(self, '_meta') and self._meta.get('table_name'):
+            self.name = self._meta['table_name']
+        else:
+            self.name = self.__class__.__name__.lower()
+
+    def all(self,):
+        return Query(self)
+
+
+# Next let's define the fields and tables for the review table, containing the id / url / date / rating fields
+class IdField(Field):
+    allowed_operations = [Operations.EQ, Operations.IN, Operations.NI, Operations.LT, Operations.GT]
+    name = 'id'
+
+
+class UrlField(Field):
+    allowed_operations = [Operations.EQ]
+    name = 'url'
+
+
+class DateField(Field):
+    allowed_operations = [Operations.EQ, Operations.LT, Operations.GT]
+    name = 'date'
+
+
+class RatingField(Field):
+    allowed_operations = [Operations.EQ, Operations.LT, Operations.GT]
+    name = 'rating'
+
+
+# Define the review table
+class Review(TableBase):
+    id = IdField()
+    url = UrlField()
+    date = DateField()
+    rating = RatingField()
+    _meta = {"table_name": "review"}
+
+
+# Build some query strings/.
 print(
     Review().all()
     .filter(Review.rating, Operations.GT, 3)
